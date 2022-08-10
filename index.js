@@ -9,9 +9,13 @@ let shipName //= document.getElementById('ship_name_submit');
 let shipPort //= document.getElementById('ship_port_submit');
 let shipDescription //= document.getElementById('ship_description_submit');
 
+const loginSubmit = document.getElementById('loginSubmit');
+loginSubmit.addEventListener('click' ,()=>{loginAttempt()})
+
 const tag = document.getElementById('tag_link');
 tag.href = "http://"+tag.innerText;
 
+let user ={};
 
 searchSubmit.addEventListener('click', (e)=>{
     e.preventDefault();
@@ -37,8 +41,6 @@ function LoadSearchData(data){
         tableHtml+= `<td>${Ship.Ship}</td>`
         tableHtml+= `<td>${Ship.Port}</td>`
         tableHtml+= `<td>${Ship.Description} - ${Ship.User}</td>`
-        tableHtml+= `<td><button class="delete-row-btn" data-id=${Ship.ID}>Delete</td>`
-        tableHtml+= `<td><button class="edit-row-btn" data-id=${Ship.ID}>Edit</td>`
     tableHtml+= "</tr>";
     });
 
@@ -54,7 +56,8 @@ function AddData(){
     const data = {
         ship:shipName.value,
         port:shipPort.value,
-        description:shipDescription.value
+        description:shipDescription.value,
+        username:user.name
     }
     fetch('http://localhost:5000/insert', {
         headers:{
@@ -142,4 +145,26 @@ function resetSearch(){
         .then(response=>response.json())
         .then(data=>LoadSearchData(data["data"]))
     })
+}
+
+function loginAttempt(){
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    fetch(`http://localhost:5000/loginAttempt/${username}/${password}`)
+    .then(response=>response.json())
+    .then(data=>{
+        loginSuccess(data);
+    })
+    
+}
+function loginSuccess(data){
+    if(!!data.data[0]){
+        user.name = data.data[0].Username;
+        document.getElementById('body').classList.remove('hidden');
+        document.getElementById('loginBox').classList.add('hidden');
+    }
+    else{
+        document.getElementById('errorBox').innerHTML = "na u fucke dup homie";
+    }
 }

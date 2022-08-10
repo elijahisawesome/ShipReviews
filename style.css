@@ -139,3 +139,26 @@ th,td{
         transform: rotate(5deg) scale(.9);
     }
 }
+
+.hidden{
+    visibility:hidden;
+}
+.visible{
+    visibility: visible;
+}
+.visible.hidden{
+    visibility:hidden;
+}
+#loginBox{
+    width:50%;
+    height:50%;
+    position:absolute;
+    left:25%;
+    top:25%;
+    border-style:solid;
+    border-radius: 6px;
+    text-align:center;
+    background-color:rgb(114, 116, 153);
+    color:aliceblue;
+    font-size: 50px;
+}

@@ -37,6 +37,16 @@ app.get(`/getShip/:ship`, (request, response)=>{
     .catch(e=>{console.log(e)})
 })
 
+app.get(`/loginAttempt/:un/:pw`, (request, response)=>{
+    const db=dbService.getDbServiceInstance();
+    const result = db.loginAttempt(request.params.un,request.params.pw);
+
+    result
+    .then(data=>{
+        response.json({data:data})
+    })
+    .catch(e=>{console.log(e)})
+})
 
 //update
 

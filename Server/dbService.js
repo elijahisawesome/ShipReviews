@@ -48,7 +48,7 @@ class DbService {
             {
                 const query = "INSERT INTO ships (Description, Port, Ship, User) VALUES (?,?,?,?);";
 
-                connection.query(query, [ship.description, ship.port, ship.ship, "Elijah Beavers"], (err, result)=>{
+                connection.query(query, [ship.description, ship.port, ship.ship, ship.username], (err, result)=>{
                     if(!!err) reject(new Error(err.message));
                     resolve(result.insertId);
                 })
@@ -77,6 +77,24 @@ class DbService {
         }
         catch(e){
             console.log(e);
+        }
+    }
+    async loginAttempt(un, pw){
+        try{
+            const uni = `'${un}'`
+            const pwi = `'${pw}'`
+            const response = await new Promise((resolve, reject)=>{
+                const query = "SELECT * FROM `users` WHERE `Username` = " + uni +"AND `Password` = " +pwi +";";
+
+                connection.query(query, (err, results)=>{
+                    if (!!err) reject(new Error(err.message));
+                    resolve(results);
+                })
+            })
+            return response;
+        }
+        catch{
+
         }
     }  
 }
