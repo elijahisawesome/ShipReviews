@@ -1,13 +1,22 @@
+import { initializeApp } from 'firebase/app';
+import {collection,addDoc,query,getDocs,where,} from 'firebase/firestore';
+import db from './Firebase/firebase-config';
+import page from "./page.html";
+import style from "./style.css";
+
+  document.querySelector("body").innerHTML = page;
+  document.querySelector('body').classList.add('hidden');
+
 const submitModButton = document.getElementById("submitHeaderButton");
 const readModButton = document.getElementById("readHeaderButton");
 
 let searchSubmit = document.getElementById("search_button");
-let submitButton //= document.getElementById('submit_button');
+let submitButton;
 
 let searchInput = document.getElementById('search_input');
-let shipName //= document.getElementById('ship_name_submit');
-let shipPort //= document.getElementById('ship_port_submit');
-let shipDescription //= document.getElementById('ship_description_submit');
+let shipName;
+let shipPort;
+let shipDescription;
 
 const loginSubmit = document.getElementById('loginSubmit');
 loginSubmit.addEventListener('click' ,()=>{loginAttempt()})
@@ -20,37 +29,70 @@ let user ={};
 searchSubmit.addEventListener('click', (e)=>{
     e.preventDefault();
 
-    const value = searchInput.value;
+    const value = searchInput.value.toUpperCase();
+    const q = query(collection(db,"ships"), where("Ship", "==", value));
 
-    fetch(`http://localhost:5000/getShip/${value}`)
-    .then(response=>response.json())
-    .then(data=>LoadSearchData(data["data"]))
-})/*
-submitButton.addEventListener('click',(e)=>{
-    e.preventDefault();
-    AddData();
+    const mySnap = getDocs(q,(val)=>{
+        const data = Promise.resolve(val);
+        return data;
+    })
+    mySnap.then(data=>{
+        if(!data.empty){
+            LoadSearchData(data.docs)
+        }
+    })
+    .catch(e=>{
+        console.log(e)
+    })
 })
-*/
-function LoadSearchData(data){
 
+
+async function setData(data){
+    await addDoc(collection(db, 'ships'), {
+        Description:data.description,
+        Port:data.port,
+        Ship:data.ship.toUpperCase(),
+        User:user.name
+    })
+    .then(()=>{
+        console.log("success");
+
+        const forms = document.getElementById('forms');
+        const main = document.getElementById('main');
+        const thankyou = document.createElement('div');
+        thankyou.id = "thankyouBox";
+
+        forms.remove();
+        thankyou.innerText = "Submission Success, Thanks!";
+        main.append(thankyou);
+    });
+}
+async function loadData(name){
+    await getDocs(collection(db,"ships"),(data)=>{
+    })
+    .then(data=>{
+        console.log(data);
+    })
+}
+
+function LoadSearchData(data){
+    
+    const info = data;
 
     const table = document.querySelector('table tbody');
     let tableHtml = "";
-    data.forEach(Ship => {
+
+    info.forEach(ship=>{
         tableHtml+= "<tr>";
-        tableHtml+= `<td>${Ship.Ship}</td>`
-        tableHtml+= `<td>${Ship.Port}</td>`
-        tableHtml+= `<td>${Ship.Description} - ${Ship.User}</td>`
-    tableHtml+= "</tr>";
-    });
+            tableHtml+= `<td>${ship._document.data.value.mapValue.fields.Ship.stringValue}</td>`;
+            tableHtml+= `<td>${ship._document.data.value.mapValue.fields.Port.stringValue}</td>`;
+            tableHtml+= `<td>${ship._document.data.value.mapValue.fields.Description.stringValue} - ${ship._document.data.value.mapValue.fields.User.stringValue}</td>`;
+        tableHtml+= "<tr>";
+    })
 
     table.innerHTML=tableHtml;
 }
 
-
-tag.addEventListener('click', (e)=>{
-
-})
 
 function AddData(){
     const data = {
@@ -59,23 +101,9 @@ function AddData(){
         description:shipDescription.value,
         username:user.name
     }
-    fetch('http://localhost:5000/insert', {
-        headers:{
-            'Content-type': 'application/json'
-        },
-        method:'POST',
-        body: JSON.stringify(
-            {ship:data}
-            )
-    })
-    .then(response => response.json())
-    .then(data => {
-        //insertRowIntoTable(data['data'])
-        console.log(data);
-    })
+
+    setData(data);
 }
-
-
 
 submitModButton.addEventListener('click', (e)=>{
     const main = document.getElementById("forms");
@@ -86,6 +114,7 @@ submitModButton.addEventListener('click', (e)=>{
 
     resetForms();
     resetSubmit();
+    
 })
 readModButton.addEventListener('click', () => {
     const main = document.getElementById('forms');
@@ -96,7 +125,25 @@ readModButton.addEventListener('click', () => {
     main.prepend(div);
 
     resetForms();
-    resetSearch();
+    searchSubmit.addEventListener('click', (e)=>{
+        e.preventDefault();
+
+        const value = searchInput.value.toUpperCase();
+        const q = query(collection(db,"ships"), where("Ship", "==", value));
+
+        const mySnap = getDocs(q,(val)=>{
+            const data = Promise.resolve(val);
+            return data;
+        })
+        mySnap.then(data=>{
+            if(!data.empty){
+                LoadSearchData(data.docs)
+            }
+        })
+        .catch(e=>{
+            console.log(e)
+        })
+    })
 })
 
 function SubmitModule(){
@@ -135,33 +182,36 @@ function resetSubmit(){
         AddData();
     })
 }
-function resetSearch(){
-    searchSubmit.addEventListener('click', (e)=>{
-        e.preventDefault();
-    
-        const value = searchInput.value;
-    
-        fetch(`http://localhost:5000/getShip/${value}`)
-        .then(response=>response.json())
-        .then(data=>LoadSearchData(data["data"]))
-    })
-}
 
 function loginAttempt(){
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    fetch(`http://localhost:5000/loginAttempt/${username}/${password}`)
-    .then(response=>response.json())
-    .then(data=>{
-        loginSuccess(data);
+    const q = query(collection(db,"Ids"), where("name", "==", username.toUpperCase()));
+
+    const mySnap = getDocs(q,(val)=>{
+        const data = Promise.resolve(val);
+        return data;
     })
-    
+    mySnap.then((val)=>{
+        console.log(val);
+        let combo = val.docs[0]._document.data.value.mapValue.fields;
+        if(!val.empty && combo.password.stringValue == password)
+        {
+            console.log("success");
+            loginSuccess(true, combo.name.stringValue );
+        }
+        else{
+            console.log("wrong PW");
+            loginSuccess(false);
+        }
+    })
 }
-function loginSuccess(data){
-    if(!!data.data[0]){
-        user.name = data.data[0].Username;
-        document.getElementById('body').classList.remove('hidden');
+
+function loginSuccess(success, name){
+    if(success){
+        user.name = name;
+        document.querySelector('body').classList.remove('hidden');
         document.getElementById('loginBox').classList.add('hidden');
     }
     else{

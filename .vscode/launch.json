@@ -1,0 +1,33 @@
+{
+    "configurations": [
+        {
+            "name": "Cloud Run: Run/Debug Locally",
+            "type": "cloudcode.cloudrun",
+            "request": "launch",
+            "build": {
+                "buildpacks": {
+                    "path": "Server/package.json",
+                    "builder": "gcr.io/buildpacks/builder:v1",
+                    "env": []
+                }
+            },
+            "image": "src",
+            "service": {
+                "name": "src",
+                "containerPort": 8080,
+                "cloudSqlInstances": [
+                    "ship-reviews:us-east1:shipreview"
+                ],
+                "resources": {
+                    "limits": {
+                        "memory": "256Mi"
+                    }
+                }
+            },
+            "target": {
+                "minikube": {}
+            },
+            "watch": true
+        }
+    ]
+}
